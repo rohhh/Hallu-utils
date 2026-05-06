@@ -1,0 +1,1146 @@
+<!DOCTYPE html>
+<html lang="en" class="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OpenClaw Hallucinations Utilities</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {}
+            }
+        }
+    </script>
+    <style>
+        /* Custom scrollbar for code blocks */
+        pre::-webkit-scrollbar, div::-webkit-scrollbar { width: 8px; height: 8px; }
+        pre::-webkit-scrollbar-track, div::-webkit-scrollbar-track { background: rgba(255, 255, 255, 0.05); border-radius: 4px; }
+        pre::-webkit-scrollbar-thumb, div::-webkit-scrollbar-thumb { background: #4b5563; border-radius: 4px; }
+        pre::-webkit-scrollbar-thumb:hover, div::-webkit-scrollbar-thumb:hover { background: #6b7280; }
+        
+        /* Smooth animations */
+        .turn-body, body, .tab-content {
+            transition: background-color 0.3s ease, color 0.3s ease, all 0.3s ease-in-out;
+        }
+
+        /* JSON Details marker styling */
+        details.json-details > summary::-webkit-details-marker {
+            display: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-sans p-4 md:p-8 min-h-screen transition-colors duration-300">
+    
+    <div class="max-w-6xl mx-auto">
+        <!-- Top Bar with Theme Switcher -->
+        <div class="flex justify-end mb-4">
+            <button id="themeToggle" class="p-2 rounded-lg bg-slate-200 dark:bg-slate-700 text-slate-700 dark:text-slate-200 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <!-- Sun Icon (shows in dark mode) -->
+                <svg id="sunIcon" class="hidden w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <!-- Moon Icon (shows in light mode) -->
+                <svg id="moonIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+        </div>
+
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <h1 class="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-3">OpenClaw Hallucinations Utilities</h1>
+        </header>
+
+        <!-- Tabs Navigation -->
+        <div class="flex flex-wrap border-b border-slate-200 dark:border-slate-700 mb-8">
+            <button onclick="switchTab('trajectory')" id="tab-btn-trajectory" class="px-6 py-3 text-sm font-medium border-b-2 border-blue-500 text-blue-600 dark:text-blue-400 focus:outline-none transition-colors">
+                Trajectory Viewer
+            </button>
+            <button onclick="switchTab('cds')" id="tab-btn-cds" class="px-6 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 focus:outline-none transition-colors">
+                CDS Converter
+            </button>
+            <button onclick="switchTab('diff')" id="tab-btn-diff" class="px-6 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 focus:outline-none transition-colors">
+                Diff Checker
+            </button>
+            <button onclick="switchTab('json')" id="tab-btn-json" class="px-6 py-3 text-sm font-medium border-b-2 border-transparent text-slate-500 hover:text-slate-700 dark:text-slate-400 dark:hover:text-slate-200 focus:outline-none transition-colors">
+                JSON Viewer
+            </button>
+        </div>
+
+        <!-- TAB 1: Trajectory Viewer -->
+        <div id="tab-trajectory" class="tab-content block">
+            <!-- File upload zone (Drag & Drop) -->
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700 text-center mb-6 transition-all duration-200" id="drop-zone">
+                <label for="fileInput" class="block w-full cursor-pointer">
+                    <div class="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-xl p-8 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-slate-700 transition-colors" id="drop-zone-inner">
+                        <svg class="mx-auto h-10 w-10 text-slate-400 dark:text-slate-500 mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+                        </svg>
+                        <span class="text-blue-600 dark:text-blue-400 font-semibold text-lg">Click to upload a file</span>
+                        <p class="text-slate-500 dark:text-slate-400 mt-1">or drag and drop it here (.txt, .json)</p>
+                        <input type="file" id="fileInput" accept=".json, .txt" class="hidden">
+                    </div>
+                </label>
+                <div id="error-message" class="text-red-500 dark:text-red-400 mt-4 hidden font-medium bg-red-50 dark:bg-red-900/20 p-3 rounded-lg border border-red-100 dark:border-red-800"></div>
+            </div>
+
+            <!-- Filter and Search Controls -->
+            <div id="controls" class="hidden flex flex-col gap-4 mb-2">
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-xl shadow-sm border border-slate-200 dark:border-slate-700 flex flex-col md:flex-row gap-4 items-center">
+                    <!-- Search -->
+                    <div class="relative w-full md:flex-1">
+                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                            <svg class="h-5 w-5 text-slate-400 dark:text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                        <input type="text" id="searchInput" placeholder="Search text in the trajectory..." class="block w-full pl-10 pr-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg leading-5 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm transition-shadow">
+                    </div>
+                    
+                    <!-- Filter by Type -->
+                    <div class="w-full md:w-48">
+                        <select id="typeFilter" class="block w-full pl-3 pr-10 py-2 text-base border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                            <option value="all">Any Type</option>
+                            <option value="message">Messages (message)</option>
+                            <option value="session">Sessions (session)</option>
+                            <option value="model_change">Model (model_change)</option>
+                            <option value="custom">Custom (custom)</option>
+                            <option value="other">Other types</option>
+                        </select>
+                    </div>
+
+                    <!-- Filter by Role -->
+                    <div class="w-full md:w-48">
+                        <select id="roleFilter" class="block w-full pl-3 pr-10 py-2 text-base border border-slate-300 dark:border-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-lg bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100">
+                            <option value="all">All Roles</option>
+                            <option value="user">User</option>
+                            <option value="assistant">Assistant</option>
+                            <option value="toolResult">Tool Results</option>
+                            <option value="system">System</option>
+                        </select>
+                    </div>
+                </div>
+                <!-- Results Counter and Global Actions -->
+                <div class="flex justify-between items-center px-2 mb-2">
+                    <div id="resultCount" class="text-sm font-semibold text-slate-500 dark:text-slate-400"></div>
+                    <div class="flex gap-2">
+                        <button onclick="expandAll()" class="text-xs font-medium px-3 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">Expand All</button>
+                        <button onclick="collapseAll()" class="text-xs font-medium px-3 py-1.5 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">Collapse All</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline Container -->
+            <div id="timeline" class="space-y-4 pb-20">
+                <!-- Initial empty state -->
+                <div class="text-center text-slate-400 dark:text-slate-500 py-10" id="empty-state">
+                    <p>The trajectory will appear here once you upload a valid file.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 2: CDS Converter -->
+        <div id="tab-cds" class="tab-content hidden">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+                <div class="flex flex-col gap-6 max-w-3xl mx-auto mt-4">
+                    <!-- Input -->
+                    <div class="flex flex-col">
+                        <input type="text" id="cdsInput" class="w-full p-4 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="scale-cds://A/B#s3/C">
+                    </div>
+
+                    <div class="flex flex-col items-center gap-4">
+                        <button onclick="convertCDS()" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800">
+                            Generate Link
+                        </button>
+
+                        <!-- Output Link -->
+                        <a id="cdsDownloadLink" download target="_blank" href="#" class="hidden text-lg font-bold text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 underline transition-colors break-all text-center"></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 3: Diff Checker -->
+        <div id="tab-diff" class="tab-content hidden">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+                
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Original Text</label>
+                        <textarea id="diffOriginal" rows="10" class="w-full p-4 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre" placeholder="Paste original text..."></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-2">Modified Text</label>
+                        <textarea id="diffModified" rows="10" class="w-full p-4 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 whitespace-pre" placeholder="Paste modified text..."></textarea>
+                    </div>
+                </div>
+
+                <div class="flex justify-center mb-8">
+                    <button onclick="compareDiff()" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800">
+                        Compare Text
+                    </button>
+                </div>
+
+                <!-- Diff Result Table -->
+                <div id="diffResultContainer" class="hidden overflow-x-auto border border-slate-300 dark:border-slate-600 rounded-lg shadow-sm">
+                    <table class="w-full text-left font-mono text-[13px] border-collapse bg-white dark:bg-slate-800">
+                        <thead>
+                            <tr class="bg-slate-100 dark:bg-slate-700 border-b border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300">
+                                <th class="w-10 px-2 py-2 text-center border-r border-slate-300 dark:border-slate-600"></th>
+                                <th class="w-1/2 px-4 py-2 font-semibold">Original</th>
+                                <th class="w-10 px-2 py-2 text-center border-r border-l border-slate-300 dark:border-slate-600"></th>
+                                <th class="w-1/2 px-4 py-2 font-semibold">Modified</th>
+                            </tr>
+                        </thead>
+                        <tbody id="diffTableBody" class="divide-y divide-slate-100 dark:divide-slate-700/50">
+                            <!-- Populated dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- TAB 4: JSON Viewer -->
+        <div id="tab-json" class="tab-content hidden">
+            <div class="bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-sm border border-slate-200 dark:border-slate-700">
+                <!-- Input -->
+                <div class="mb-4">
+                    <textarea id="jsonViewerInput" rows="6" class="w-full p-4 border border-slate-300 dark:border-slate-600 rounded-lg bg-slate-50 dark:bg-slate-900 text-slate-800 dark:text-slate-200 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder='Paste your raw JSON object or array here...'></textarea>
+                </div>
+                <div class="flex justify-center mb-6">
+                    <button onclick="parseAndRenderJson()" class="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800">
+                        Render JSON
+                    </button>
+                </div>
+
+                <!-- Controls (Hidden until rendered) -->
+                <div id="jsonControls" class="hidden mb-6 space-y-4">
+                    <!-- Toggle Views -->
+                    <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div class="relative w-full sm:flex-1">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                            <input type="text" id="jsonViewerSearch" placeholder="Filter nodes by text or key..." class="block w-full pl-10 pr-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg leading-5 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow">
+                        </div>
+                        <div class="inline-flex bg-slate-100 dark:bg-slate-900 rounded-lg p-1 border border-slate-200 dark:border-slate-700 w-full sm:w-auto overflow-hidden">
+                            <button id="btnTreeView" onclick="setJsonViewMode('tree')" class="flex-1 sm:flex-none px-4 py-1.5 text-sm font-bold rounded-md bg-white dark:bg-slate-700 shadow text-blue-600 dark:text-blue-400 transition-all">Tree View</button>
+                            <button id="btnCardView" onclick="setJsonViewMode('card')" class="flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">Card View (Human Readable)</button>
+                        </div>
+                    </div>
+                    
+                    <div class="border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-900/50">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300">Filter by Keys (Tags)</h3>
+                            <div class="flex items-center gap-4">
+                                <div class="flex gap-2 border-r border-slate-300 dark:border-slate-600 pr-4">
+                                    <button onclick="expandAllJson()" class="text-[12px] font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Expand All</button>
+                                    <button onclick="collapseAllJson()" class="text-[12px] font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Collapse All</button>
+                                </div>
+                                <button onclick="clearJsonTags()" class="text-[12px] font-medium text-blue-600 dark:text-blue-400 hover:underline">Clear Tags</button>
+                            </div>
+                        </div>
+                        <div id="jsonTagsContainer" class="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
+                            <!-- Tags injected here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Output Tree View -->
+                <div id="jsonViewerOutput" class="hidden overflow-x-auto border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-[#1e1e1e] p-4 font-mono text-[13px] leading-relaxed">
+                </div>
+
+                <!-- Output Card View -->
+                <div id="jsonViewerCardOutput" class="hidden">
+                    <!-- Cards injected here -->
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // --- THEME SWITCHER LOGIC ---
+        const themeToggle = document.getElementById('themeToggle');
+        const sunIcon = document.getElementById('sunIcon');
+        const moonIcon = document.getElementById('moonIcon');
+        const htmlElement = document.documentElement;
+
+        if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            htmlElement.classList.add('dark');
+            sunIcon.classList.remove('hidden');
+            moonIcon.classList.add('hidden');
+        } else {
+            htmlElement.classList.remove('dark');
+        }
+
+        themeToggle.addEventListener('click', () => {
+            htmlElement.classList.toggle('dark');
+            if (htmlElement.classList.contains('dark')) {
+                localStorage.theme = 'dark';
+                sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+            } else {
+                localStorage.theme = 'light';
+                sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+            }
+        });
+
+        // --- TABS LOGIC ---
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('block');
+                el.classList.add('hidden');
+            });
+            document.querySelectorAll('button[id^="tab-btn-"]').forEach(el => {
+                el.classList.remove('border-blue-500', 'text-blue-600', 'dark:text-blue-400');
+                el.classList.add('border-transparent', 'text-slate-500', 'dark:text-slate-400');
+            });
+
+            document.getElementById(`tab-${tabId}`).classList.remove('hidden');
+            document.getElementById(`tab-${tabId}`).classList.add('block');
+            
+            const activeBtn = document.getElementById(`tab-btn-${tabId}`);
+            activeBtn.classList.remove('border-transparent', 'text-slate-500', 'dark:text-slate-400');
+            activeBtn.classList.add('border-blue-500', 'text-blue-600', 'dark:text-blue-400');
+        }
+
+        // --- CDS CONVERTER LOGIC ---
+        function convertCDS() {
+            const input = document.getElementById('cdsInput').value.trim();
+            if (!input) return;
+
+            // Pattern: scale-cds://A/B#s3/C
+            const regex = /^scale-cds:\/\/(.+?)#s3\/(.+)$/;
+            const match = input.match(regex);
+            
+            if (match) {
+                const ab = match[1];
+                const c = match[2];
+                // Output: https://C.s3.amazonaws.com/A/B
+                const url = `https://${c}.s3.amazonaws.com/${ab}`;
+                
+                const link = document.getElementById('cdsDownloadLink');
+                link.href = url;
+                link.textContent = url;
+                link.classList.remove('hidden');
+                link.classList.add('block');
+            } else {
+                alert('Invalid format. Please use: scale-cds://A/B#s3/C');
+            }
+        }
+
+        // --- DIFF CHECKER LOGIC ---
+        function compareDiff() {
+            const text1 = document.getElementById('diffOriginal').value;
+            const text2 = document.getElementById('diffModified').value;
+            
+            const diffs = getLineDiff(text1, text2);
+            
+            const tbody = document.getElementById('diffTableBody');
+            let html = '';
+            let lineNumL = 1;
+            let lineNumR = 1;
+            
+            diffs.forEach(d => {
+                const val = escapeHTML(d.value) || ' ';
+                
+                if (d.type === 'equal') {
+                    html += `<tr>
+                        <td class="w-10 px-2 py-1 text-right text-slate-400 select-none border-r border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50">${lineNumL++}</td>
+                        <td class="w-1/2 px-4 py-1 text-slate-800 dark:text-slate-300 whitespace-pre-wrap break-all">${val}</td>
+                        <td class="w-10 px-2 py-1 text-right text-slate-400 select-none border-r border-l border-slate-300 dark:border-slate-600 bg-slate-50 dark:bg-slate-800/50">${lineNumR++}</td>
+                        <td class="w-1/2 px-4 py-1 text-slate-800 dark:text-slate-300 whitespace-pre-wrap break-all">${val}</td>
+                    </tr>`;
+                } else if (d.type === 'removed') {
+                    html += `<tr class="bg-red-100/50 dark:bg-red-900/30">
+                        <td class="w-10 px-2 py-1 text-right text-red-500 select-none border-r border-red-200 dark:border-red-800/50 bg-red-50 dark:bg-red-900/50">${lineNumL++}</td>
+                        <td class="w-1/2 px-4 py-1 text-red-800 dark:text-red-300 whitespace-pre-wrap break-all">${val}</td>
+                        <td class="w-10 border-r border-l border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50"></td>
+                        <td class="w-1/2 px-4 py-1 bg-slate-100/50 dark:bg-slate-800/20"></td>
+                    </tr>`;
+                } else if (d.type === 'added') {
+                    html += `<tr class="bg-green-100/50 dark:bg-green-900/30">
+                        <td class="w-10 border-r border-slate-300 dark:border-slate-600 bg-slate-100 dark:bg-slate-800/50"></td>
+                        <td class="w-1/2 px-4 py-1 bg-slate-100/50 dark:bg-slate-800/20"></td>
+                        <td class="w-10 px-2 py-1 text-right text-green-500 select-none border-r border-l border-green-200 dark:border-green-800/50 bg-green-50 dark:bg-green-900/50">${lineNumR++}</td>
+                        <td class="w-1/2 px-4 py-1 text-green-800 dark:text-green-300 whitespace-pre-wrap break-all">${val}</td>
+                    </tr>`;
+                }
+            });
+            
+            tbody.innerHTML = html;
+            document.getElementById('diffResultContainer').classList.remove('hidden');
+        }
+
+        function getLineDiff(text1, text2) {
+            let lines1 = text1.split('\n');
+            let lines2 = text2.split('\n');
+            
+            let prefixCount = 0;
+            while (prefixCount < lines1.length && prefixCount < lines2.length && lines1[prefixCount] === lines2[prefixCount]) {
+                prefixCount++;
+            }
+            
+            let suffixCount = 0;
+            while (suffixCount < lines1.length - prefixCount && suffixCount < lines2.length - prefixCount && lines1[lines1.length - 1 - suffixCount] === lines2[lines2.length - 1 - suffixCount]) {
+                suffixCount++;
+            }
+            
+            const prefix = lines1.slice(0, prefixCount).map(val => ({ type: 'equal', value: val }));
+            const suffix = lines1.slice(lines1.length - suffixCount).map(val => ({ type: 'equal', value: val }));
+            
+            lines1 = lines1.slice(prefixCount, lines1.length - suffixCount);
+            lines2 = lines2.slice(prefixCount, lines2.length - suffixCount);
+            
+            let middle = [];
+            if (lines1.length === 0) {
+                middle = lines2.map(val => ({ type: 'added', value: val }));
+            } else if (lines2.length === 0) {
+                middle = lines1.map(val => ({ type: 'removed', value: val }));
+            } else {
+                const m = lines1.length;
+                const n = lines2.length;
+                
+                if (m * n > 25000000) {
+                    return [
+                        ...prefix,
+                        { type: 'removed', value: '--- DIFF LIMIT EXCEEDED: TEXT TOO LARGE ---' },
+                        { type: 'added', value: '--- DIFF LIMIT EXCEEDED: TEXT TOO LARGE ---' },
+                        ...suffix
+                    ];
+                }
+
+                const dp = Array(m + 1).fill(null).map(() => new Int32Array(n + 1));
+                
+                for (let i = 1; i <= m; i++) {
+                    for (let j = 1; j <= n; j++) {
+                        if (lines1[i - 1] === lines2[j - 1]) {
+                            dp[i][j] = dp[i - 1][j - 1] + 1;
+                        } else {
+                            dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+                        }
+                    }
+                }
+                
+                let i = m, j = n;
+                while (i > 0 || j > 0) {
+                    if (i > 0 && j > 0 && lines1[i - 1] === lines2[j - 1]) {
+                        middle.unshift({ type: 'equal', value: lines1[i - 1] });
+                        i--; j--;
+                    } else if (j > 0 && (i === 0 || dp[i][j - 1] >= dp[i - 1][j])) {
+                        middle.unshift({ type: 'added', value: lines2[j - 1] });
+                        j--;
+                    } else if (i > 0 && (j === 0 || dp[i][j - 1] < dp[i - 1][j])) {
+                        middle.unshift({ type: 'removed', value: lines1[i - 1] });
+                        i--;
+                    }
+                }
+            }
+            
+            return [...prefix, ...middle, ...suffix];
+        }
+
+        // --- JSON VIEWER LOGIC ---
+        let rawJsonData = null;
+        let activeJsonTags = new Set();
+        let allJsonKeys = new Set();
+        let currentJsonViewMode = 'tree';
+
+        function setJsonViewMode(mode) {
+            currentJsonViewMode = mode;
+            const btnTree = document.getElementById('btnTreeView');
+            const btnCard = document.getElementById('btnCardView');
+            const outTree = document.getElementById('jsonViewerOutput');
+            const outCard = document.getElementById('jsonViewerCardOutput');
+
+            if (mode === 'tree') {
+                btnTree.className = 'flex-1 sm:flex-none px-4 py-1.5 text-sm font-bold rounded-md bg-white dark:bg-slate-700 shadow text-blue-600 dark:text-blue-400 transition-all';
+                btnCard.className = 'flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all';
+                outTree.classList.remove('hidden');
+                outCard.classList.add('hidden');
+            } else {
+                btnCard.className = 'flex-1 sm:flex-none px-4 py-1.5 text-sm font-bold rounded-md bg-white dark:bg-slate-700 shadow text-blue-600 dark:text-blue-400 transition-all';
+                btnTree.className = 'flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all';
+                outCard.classList.remove('hidden');
+                outTree.classList.add('hidden');
+            }
+            updateJsonView();
+        }
+
+        window.expandAllJson = function() {
+            const container = currentJsonViewMode === 'tree' ? document.getElementById('jsonViewerOutput') : document.getElementById('jsonViewerCardOutput');
+            container.querySelectorAll('details').forEach(d => d.setAttribute('open', ''));
+        };
+
+        window.collapseAllJson = function() {
+            const container = currentJsonViewMode === 'tree' ? document.getElementById('jsonViewerOutput') : document.getElementById('jsonViewerCardOutput');
+            container.querySelectorAll('details').forEach(d => d.removeAttribute('open'));
+        };
+
+        window.toggleNestedDetails = function(e, btn, openState) {
+            e.preventDefault();
+            e.stopPropagation();
+            const details = btn.closest('details');
+            if (details) {
+                details.querySelectorAll('details').forEach(d => {
+                    if (openState) d.setAttribute('open', '');
+                    else d.removeAttribute('open');
+                });
+                if (openState) {
+                    details.setAttribute('open', '');
+                } else {
+                    details.removeAttribute('open');
+                }
+            }
+        };
+
+        function parseAndRenderJson() {
+            const input = document.getElementById('jsonViewerInput').value;
+            try {
+                let cleanInput = input.trim();
+                const startIdx = cleanInput.indexOf('{');
+                const startArrIdx = cleanInput.indexOf('[');
+                const actualStart = (startIdx !== -1 && startArrIdx !== -1) ? Math.min(startIdx, startArrIdx) : Math.max(startIdx, startArrIdx);
+                
+                const endIdx = cleanInput.lastIndexOf('}');
+                const endArrIdx = cleanInput.lastIndexOf(']');
+                const actualEnd = Math.max(endIdx, endArrIdx) + 1;
+
+                if (actualStart !== -1 && actualEnd !== -1) {
+                    cleanInput = cleanInput.substring(actualStart, actualEnd);
+                }
+
+                rawJsonData = JSON.parse(cleanInput);
+                
+                allJsonKeys.clear();
+                activeJsonTags.clear();
+                extractAllKeys(rawJsonData, allJsonKeys);
+                
+                renderJsonTags();
+                document.getElementById('jsonControls').classList.remove('hidden');
+                document.getElementById('jsonViewerSearch').value = '';
+                
+                if (currentJsonViewMode === 'tree') {
+                    document.getElementById('jsonViewerOutput').classList.remove('hidden');
+                } else {
+                    document.getElementById('jsonViewerCardOutput').classList.remove('hidden');
+                }
+                
+                updateJsonView();
+            } catch (e) {
+                alert('Invalid JSON structure. Ensure you pasted a valid JSON array or object. \nDetails: ' + e.message);
+            }
+        }
+
+        document.getElementById('jsonViewerSearch').addEventListener('input', () => {
+            updateJsonView();
+        });
+
+        function clearJsonTags() {
+            activeJsonTags.clear();
+            renderJsonTags();
+            updateJsonView();
+        }
+
+        function extractAllKeys(data, keysSet) {
+            if (data && typeof data === 'object' && !Array.isArray(data)) {
+                Object.keys(data).forEach(k => {
+                    keysSet.add(k);
+                    extractAllKeys(data[k], keysSet);
+                });
+            } else if (Array.isArray(data)) {
+                data.forEach(item => extractAllKeys(item, keysSet));
+            }
+        }
+
+        function renderJsonTags() {
+            const container = document.getElementById('jsonTagsContainer');
+            container.innerHTML = '';
+            
+            const sortedKeys = Array.from(allJsonKeys).sort((a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'}));
+            
+            sortedKeys.forEach(key => {
+                const btn = document.createElement('button');
+                const isActive = activeJsonTags.has(key);
+                
+                btn.className = `px-3 py-1.5 text-[11px] font-medium rounded-md border transition-colors ${
+                    isActive 
+                        ? 'bg-blue-600 text-white border-blue-700 dark:bg-blue-600 dark:border-blue-500' 
+                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700'
+                }`;
+                btn.innerText = key;
+                btn.onclick = () => {
+                    if (isActive) activeJsonTags.delete(key);
+                    else activeJsonTags.add(key);
+                    renderJsonTags(); 
+                    updateJsonView(); 
+                };
+                container.appendChild(btn);
+            });
+        }
+
+        function filterJsonData(data, query, tags) {
+            query = query.toLowerCase();
+            
+            function filterNode(node) {
+                if (node === null) return { keep: !query || 'null'.includes(query), val: null };
+                if (typeof node !== 'object') {
+                    return { keep: !query || String(node).toLowerCase().includes(query), val: node };
+                }
+
+                const isArray = Array.isArray(node);
+                let newNode = isArray ? [] : {};
+                let keepNode = false;
+
+                for (const key in node) {
+                    const child = node[key];
+                    const keyMatchQuery = query && key.toLowerCase().includes(query);
+                    const keyMatchTag = tags.size > 0 && tags.has(key);
+
+                    let childResult = filterNode(child);
+                    let keepChild = false;
+                    
+                    if (tags.size > 0) {
+                        if (keyMatchTag || childResult.keep) keepChild = true;
+                    } else if (query) {
+                        if (keyMatchQuery || childResult.keep) keepChild = true;
+                    } else {
+                        keepChild = true;
+                    }
+
+                    if (keepChild) {
+                        keepNode = true;
+                        let valToKeep;
+                        
+                        if ((keyMatchTag || keyMatchQuery) && !childResult.keep) {
+                            valToKeep = child;
+                        } else {
+                            valToKeep = childResult.keep ? childResult.val : child;
+                        }
+
+                        if (isArray) newNode.push(valToKeep);
+                        else newNode[key] = valToKeep;
+                    }
+                }
+                return { keep: keepNode, val: newNode };
+            }
+
+            if (!query && tags.size === 0) return data;
+            
+            const res = filterNode(data);
+            return res.keep ? res.val : (Array.isArray(data) ? [] : {});
+        }
+
+        function updateJsonView() {
+            const query = document.getElementById('jsonViewerSearch').value;
+            const filteredData = filterJsonData(rawJsonData, query, activeJsonTags);
+            
+            const isEmpty = Object.keys(filteredData).length === 0 && (!Array.isArray(filteredData) || filteredData.length === 0);
+            
+            if (isEmpty && (query || activeJsonTags.size > 0)) {
+                const emptyMsg = '<div class="text-slate-500 italic p-4 text-center">No nodes match your active filters.</div>';
+                document.getElementById('jsonViewerOutput').innerHTML = emptyMsg;
+                document.getElementById('jsonViewerCardOutput').innerHTML = emptyMsg;
+                return;
+            }
+
+            if (currentJsonViewMode === 'tree') {
+                const html = buildJsonNode(filteredData, null, true, 0);
+                document.getElementById('jsonViewerOutput').innerHTML = html;
+            } else {
+                const html = buildJsonCards(filteredData);
+                document.getElementById('jsonViewerCardOutput').innerHTML = html;
+            }
+        }
+
+        // Tree View Builder
+        function buildJsonNode(data, key, isLast, depth) {
+            const type = typeof data;
+            let keyStr = key !== null ? `<span class="text-purple-700 dark:text-[#9cdcfe] font-semibold mr-1">"${escapeHTML(key)}"</span><span class="text-slate-700 dark:text-slate-400">: </span>` : '';
+            let comma = isLast ? '' : '<span class="text-slate-700 dark:text-slate-400">,</span>';
+
+            if (data === null) return `<div class="ml-4 py-0.5">${keyStr}<span class="text-blue-500 dark:text-[#569cd6] font-bold">null</span>${comma}</div>`;
+            if (type === 'string') return `<div class="ml-4 py-0.5 flex"><div class="whitespace-pre-wrap break-all">${keyStr}<span class="text-green-600 dark:text-[#ce9178]">"${escapeHTML(data)}"</span>${comma}</div></div>`;
+            if (type === 'number') return `<div class="ml-4 py-0.5">${keyStr}<span class="text-orange-600 dark:text-[#b5cea8]">${data}</span>${comma}</div>`;
+            if (type === 'boolean') return `<div class="ml-4 py-0.5">${keyStr}<span class="text-blue-600 dark:text-[#569cd6] font-bold">${data}</span>${comma}</div>`;
+
+            if (type === 'object') {
+                const isArray = Array.isArray(data);
+                const keys = Object.keys(data);
+                const openBracket = `<span class="text-slate-700 dark:text-[#d4d4d4]">${isArray ? '[' : '{'}</span>`;
+                const closeBracket = `<span class="text-slate-700 dark:text-[#d4d4d4]">${isArray ? ']' : '}'}</span>`;
+                
+                if (keys.length === 0) return `<div class="ml-4 py-0.5">${keyStr}${openBracket}${closeBracket}${comma}</div>`;
+
+                let children = keys.map((k, i) => buildJsonNode(data[k], isArray ? null : k, i === keys.length - 1, depth + 1)).join('');
+
+                return `
+                <details open class="group json-details relative">
+                    <summary class="cursor-pointer list-none flex items-start hover:bg-slate-100 dark:hover:bg-slate-800/50 rounded py-0.5 select-none transition-colors pr-16">
+                        <span class="text-slate-400 text-[10px] w-4 text-center flex-shrink-0 pt-1 transition-transform group-open:rotate-90">▶</span>
+                        <div class="flex-1 overflow-hidden">${keyStr}${openBracket}<span class="text-slate-400 dark:text-slate-500 text-xs ml-2 hidden group-[&:not([open])]:inline group-open:hidden">... ${keys.length} items</span></div>
+                        
+                        <div class="absolute right-2 top-0.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <button onclick="toggleNestedDetails(event, this, true)" class="p-1 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded shadow-sm" title="Expand All Nested">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                            </button>
+                            <button onclick="toggleNestedDetails(event, this, false)" class="p-1 bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded shadow-sm" title="Collapse All Nested">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 14h6m0 0v6m0-6l-7 7m17-11h-6m0 0V4m0 6l7-7m-7 17l7-7M4 10l7-7"></path></svg>
+                            </button>
+                        </div>
+                    </summary>
+                    <div class="border-l border-slate-300 dark:border-slate-700 ml-2 pl-2">
+                        ${children}
+                    </div>
+                    <div class="ml-4 py-0.5">${closeBracket}${comma}</div>
+                </details>
+                `;
+            }
+        }
+
+        // Card View Builder
+        function buildJsonCards(data) {
+            let html = '<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">';
+            
+            function formatCardValue(val, depth = 0) {
+                if (val === null) return '<span class="text-slate-400 italic text-[13px]">null</span>';
+                
+                if (typeof val === 'object') {
+                    const isArr = Array.isArray(val);
+                    const keys = Object.keys(val);
+                    if (keys.length === 0) {
+                        return `<span class="text-slate-400 italic text-[13px]">${isArr ? '[]' : '{}'}</span>`;
+                    }
+                    
+                    let nestedHtml = `<div class="flex flex-col w-full">`;
+                    keys.forEach(k => {
+                        let keyLabel = isArr ? `[${k}]` : escapeHTML(k);
+                        let childVal = val[k];
+                        let isPrimitive = childVal === null || typeof childVal !== 'object' || Object.keys(childVal).length === 0;
+                        
+                        if (isPrimitive) {
+                            nestedHtml += `
+                            <div class="flex flex-row justify-between items-start gap-4 py-2 border-b border-slate-100 dark:border-slate-700/50 last:border-0 w-full">
+                                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider shrink-0 mt-0.5">${keyLabel}</span>
+                                <div class="text-right break-words min-w-0">${formatCardValue(childVal, depth + 1)}</div>
+                            </div>`;
+                        } else {
+                            nestedHtml += `
+                            <div class="flex flex-col w-full py-2 border-b border-slate-100 dark:border-slate-700/50 last:border-0">
+                                <span class="text-[11px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">${keyLabel}</span>
+                                <div class="w-full">
+                                    ${formatCardValue(childVal, depth + 1)}
+                                </div>
+                            </div>`;
+                        }
+                    });
+                    nestedHtml += `</div>`;
+
+                    if (depth === 0) {
+                        return nestedHtml;
+                    } else {
+                        const titleStr = isArr ? `Array (${keys.length})` : `Object (${keys.length})`;
+                        return `
+                        <details open class="group w-full bg-slate-50/50 dark:bg-slate-800/30 rounded border border-slate-200 dark:border-slate-700/80 shadow-sm overflow-hidden mt-1 json-nested-details">
+                            <summary class="p-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-between select-none list-none [&::-webkit-details-marker]:hidden transition-colors relative">
+                                <div class="flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5 text-slate-400 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                    ${titleStr}
+                                </div>
+                                <div class="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity absolute right-2">
+                                    <button onclick="toggleNestedDetails(event, this, true)" class="flex items-center gap-1 text-[10px] p-1 bg-white dark:bg-slate-600 border border-slate-200 dark:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-500 text-slate-600 dark:text-slate-300 rounded transition-colors shadow-sm" title="Expand All Nested">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                                    </button>
+                                    <button onclick="toggleNestedDetails(event, this, false)" class="flex items-center gap-1 text-[10px] p-1 bg-white dark:bg-slate-600 border border-slate-200 dark:border-slate-500 hover:bg-slate-50 dark:hover:bg-slate-500 text-slate-600 dark:text-slate-300 rounded transition-colors shadow-sm" title="Collapse All Nested">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 14h6m0 0v6m0-6l-7 7m17-11h-6m0 0V4m0 6l7-7m-7 17l7-7M4 10l7-7"></path></svg>
+                                    </button>
+                                </div>
+                            </summary>
+                            <div class="px-3 pb-3 border-t border-slate-100 dark:border-slate-700/80 bg-white dark:bg-slate-900/30">
+                                ${nestedHtml}
+                            </div>
+                        </details>`;
+                    }
+                }
+                
+                if (typeof val === 'string') {
+                    return `<span class="text-[13px] text-green-700 dark:text-green-400 font-medium whitespace-pre-wrap">${escapeHTML(val)}</span>`;
+                }
+                if (typeof val === 'boolean') {
+                    return `<span class="text-[13px] text-blue-600 dark:text-blue-400 font-bold">${val}</span>`;
+                }
+                return `<span class="text-[13px] text-slate-800 dark:text-slate-200">${escapeHTML(String(val))}</span>`;
+            }
+
+            function createCard(item, title) {
+                let cardHtml = `<div class="json-card-wrapper bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl p-4 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col gap-2">`;
+                if (title) {
+                    cardHtml += `<div class="text-[12px] font-bold text-slate-800 dark:text-white uppercase tracking-wider border-b border-slate-100 dark:border-slate-700 pb-2 mb-1 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2V6zM14 6a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V6zM4 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2H6a2 2 0 01-2-2v-2zM14 16a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2v-2z"></path></svg>
+                            ${title}
+                        </div>
+                        <div class="flex gap-1.5">
+                            <button onclick="toggleCardDetails(this, true)" class="flex items-center gap-1 text-[10px] px-2 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded transition-colors" title="Expand All">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"></path></svg>
+                            </button>
+                            <button onclick="toggleCardDetails(this, false)" class="flex items-center gap-1 text-[10px] px-2 py-1 bg-slate-100 hover:bg-slate-200 dark:bg-slate-700 dark:hover:bg-slate-600 text-slate-600 dark:text-slate-300 rounded transition-colors" title="Collapse All">
+                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 14h6m0 0v6m0-6l-7 7m17-11h-6m0 0V4m0 6l7-7m-7 17l7-7M4 10l7-7"></path></svg>
+                            </button>
+                        </div>
+                    </div>`;
+                }
+                
+                let isPrimitive = item === null || typeof item !== 'object';
+                if (isPrimitive) {
+                     cardHtml += `<div class="pt-1">${formatCardValue(item, 0)}</div>`;
+                } else {
+                     cardHtml += `<div>${formatCardValue(item, 0)}</div>`;
+                }
+                cardHtml += `</div>`;
+                return cardHtml;
+            }
+
+            if (Array.isArray(data)) {
+                data.forEach((item, idx) => {
+                    html += createCard(item, `Item ${idx + 1}`);
+                });
+            } else if (data && typeof data === 'object') {
+                html += createCard(data, "Object Root");
+            } else {
+                html += createCard(data, "Value");
+            }
+            
+            html += '</div>';
+            return html;
+        }
+
+        window.toggleCardDetails = function(btn, openState) {
+            const card = btn.closest('.json-card-wrapper');
+            if (card) {
+                card.querySelectorAll('details').forEach(d => {
+                    if (openState) d.setAttribute('open', '');
+                    else d.removeAttribute('open');
+                });
+            }
+        };
+
+        // --- COMMON UTILS ---
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // --- TRAJECTORY VIEWER LOGIC ---
+        const fileInputDOM = document.getElementById('fileInput');
+        const errorDiv = document.getElementById('error-message');
+        const timeline = document.getElementById('timeline');
+        const emptyState = document.getElementById('empty-state');
+        const dropZone = document.getElementById('drop-zone');
+        const dropZoneInner = document.getElementById('drop-zone-inner');
+        const controls = document.getElementById('controls');
+        const resultCount = document.getElementById('resultCount');
+
+        const searchInput = document.getElementById('searchInput');
+        const typeFilter = document.getElementById('typeFilter');
+        const roleFilter = document.getElementById('roleFilter');
+
+        let globalData = []; 
+
+        searchInput.addEventListener('input', applyFilters);
+        typeFilter.addEventListener('change', applyFilters);
+        roleFilter.addEventListener('change', applyFilters);
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, preventDefaults, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZoneInner.classList.add('border-blue-500', 'bg-blue-50', 'dark:bg-slate-700', 'dark:border-blue-400');
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => {
+                dropZoneInner.classList.remove('border-blue-500', 'bg-blue-50', 'dark:bg-slate-700', 'dark:border-blue-400');
+            }, false);
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            if (files.length > 0) {
+                fileInputDOM.files = files;
+                processFile(files[0]);
+            }
+        });
+
+        fileInputDOM.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                processFile(e.target.files[0]);
+            }
+        });
+
+        function processFile(file) {
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    let rawText = e.target.result.trim();
+                    const jsonStartIndex = rawText.indexOf('[');
+                    const jsonEndIndex = rawText.lastIndexOf(']') + 1;
+                    
+                    if (jsonStartIndex !== -1 && jsonEndIndex !== -1) {
+                        rawText = rawText.substring(jsonStartIndex, jsonEndIndex);
+                    }
+
+                    const jsonData = JSON.parse(rawText);
+                    errorDiv.classList.add('hidden');
+                    
+                    globalData = Array.isArray(jsonData) ? jsonData : [jsonData];
+                    
+                    controls.classList.remove('hidden');
+                    searchInput.value = '';
+                    typeFilter.value = 'all';
+                    roleFilter.value = 'all';
+
+                    buildDOMTimeline();
+                } catch (error) {
+                    errorDiv.innerText = 'Error processing the file. Make sure it is a valid JSON or TXT. Detail: ' + error.message;
+                    errorDiv.classList.remove('hidden');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function buildDOMTimeline() {
+            timeline.innerHTML = ''; 
+
+            if (globalData.length === 0) {
+                timeline.appendChild(emptyState);
+                resultCount.innerText = '';
+                return;
+            }
+
+            let assistantTurnCount = 0;
+
+            globalData.forEach((turn, index) => {
+                const turnType = turn.type || 'unknown';
+                let title = `Event: ${turnType}`;
+                
+                let roleClass = 'border-purple-500';
+                let bgClass = 'bg-purple-50 dark:bg-purple-900/20';
+                let textClass = 'text-purple-700 dark:text-purple-400';
+                let timeMeta = turn.timestamp ? new Date(turn.timestamp).toLocaleTimeString() : '';
+                
+                let contentObj = turn;
+                let turnRole = 'system'; 
+                
+                if (turnType === 'message' && turn.message) {
+                    turnRole = turn.message.role;
+                    contentObj = turn.message.content || turn.message;
+                    
+                    if (turnRole === 'assistant') { assistantTurnCount++; }
+                    
+                    if (turnRole === 'user') { 
+                        roleClass = 'border-blue-500'; bgClass = 'bg-blue-50 dark:bg-blue-900/20'; textClass = 'text-blue-700 dark:text-blue-400';
+                        title = `USER`; 
+                    }
+                    else if (turnRole === 'assistant') { 
+                        roleClass = 'border-green-500'; bgClass = 'bg-green-50 dark:bg-green-900/20'; textClass = 'text-green-700 dark:text-green-400';
+                        title = `Turn ${assistantTurnCount} | ASSISTANT`; 
+                    }
+                    else if (turnRole === 'toolResult') { 
+                        roleClass = 'border-orange-500'; bgClass = 'bg-orange-50 dark:bg-orange-900/20'; textClass = 'text-orange-700 dark:text-orange-400';
+                        title = `TOOL`; 
+                    }
+                    
+                    if (turnRole === 'toolResult' && turn.message.toolName) {
+                        let statusColor = turn.message.isError ? 'bg-red-100 text-red-700 dark:bg-red-900/40 dark:text-red-300 border-red-200 dark:border-red-800' : 'bg-black/10 dark:bg-white/10 text-slate-700 dark:text-slate-300 border-black/5 dark:border-white/5';
+                        title += ` <span class="inline-block px-2.5 py-0.5 ml-3 text-xs font-bold rounded-full ${statusColor} align-middle border shadow-sm">${turn.message.toolName}</span>`;
+                    } else if (turnRole === 'assistant' && turn.message.content && turn.message.content[0] && turn.message.content[0].type === 'toolCall') {
+                        title += ` <span class="inline-block px-2.5 py-0.5 ml-3 text-xs font-bold rounded-full bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300 align-middle border border-green-200 dark:border-green-800 shadow-sm">Calling: ${turn.message.content[0].name}</span>`;
+                    }
+                }
+
+                const card = document.createElement('div');
+                card.className = `bg-white dark:bg-slate-800 rounded-xl shadow-sm overflow-hidden border-l-4 ${roleClass} border border-slate-200 dark:border-slate-700 transition-opacity duration-200 hover:shadow-md turn-card-item`;
+                
+                card._turnType = turnType;
+                card._turnRole = turnRole;
+                card._searchString = JSON.stringify(turn).toLowerCase();
+
+                const isFirst = index === 0;
+
+                let extractedText = '';
+                if (typeof contentObj === 'string') {
+                    extractedText = contentObj;
+                } else if (Array.isArray(contentObj)) {
+                    contentObj.forEach(item => {
+                        if (item && item.type === 'text' && typeof item.text === 'string') {
+                            extractedText += item.text + '\n\n';
+                        } else if (item && item.text && typeof item.text === 'string') {
+                            extractedText += item.text + '\n\n';
+                        }
+                    });
+                } else if (contentObj && typeof contentObj.text === 'string') {
+                    extractedText = contentObj.text;
+                }
+
+                let formattedTextHtml = '';
+                if (extractedText.trim() !== '') {
+                    formattedTextHtml = `
+                        <div class="p-5 bg-white dark:bg-slate-800 text-slate-800 dark:text-slate-200 border-t border-slate-100 dark:border-slate-700">
+                            <div class="text-[14px] leading-relaxed">
+                                ${simpleMarkdown(extractedText.trim())}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <button onclick="toggleExpand(this)" class="w-full text-left px-5 py-4 ${bgClass} hover:brightness-[0.97] dark:hover:brightness-110 transition flex justify-between items-center focus:outline-none focus:ring-2 focus:ring-inset focus:ring-blue-500">
+                        <div class="flex items-center font-bold ${textClass} text-[15px]">
+                            ${title}
+                            <span class="text-xs text-slate-500 dark:text-slate-400 font-medium ml-4 hidden sm:inline-block bg-white/50 dark:bg-black/20 px-2 py-1 rounded-md">${timeMeta}</span>
+                        </div>
+                        <svg class="arrow w-5 h-5 text-slate-400 dark:text-slate-500 transition-transform duration-300 ${isFirst ? 'rotate-180' : ''}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </button>
+                    <div class="turn-body ${isFirst ? 'block' : 'hidden'} border-t border-slate-100 dark:border-slate-700">
+                        <div class="p-0 overflow-x-auto bg-[#1e1e1e]">
+                            <pre class="text-[#d4d4d4] text-[13px] font-mono leading-relaxed p-5 whitespace-pre-wrap break-words">${escapeHTML(JSON.stringify(contentObj, null, 2))}</pre>
+                        </div>
+                        ${formattedTextHtml}
+                    </div>
+                `;
+                timeline.appendChild(card);
+            });
+
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const searchVal = searchInput.value.toLowerCase();
+            const typeVal = typeFilter.value;
+            const roleVal = roleFilter.value;
+            let visibleCount = 0;
+
+            const cards = timeline.querySelectorAll('.turn-card-item');
+            
+            cards.forEach(card => {
+                let typeMatch = true;
+                if (typeVal !== 'all') {
+                    if (typeVal === 'other') {
+                        typeMatch = !['message', 'session', 'model_change', 'custom'].includes(card._turnType);
+                    } else {
+                        typeMatch = (card._turnType === typeVal);
+                    }
+                }
+
+                let roleMatch = true;
+                if (roleVal !== 'all') {
+                    roleMatch = (card._turnType === 'message' && card._turnRole === roleVal);
+                }
+
+                let searchMatch = true;
+                if (searchVal.trim() !== '') {
+                    searchMatch = card._searchString.includes(searchVal);
+                }
+
+                if (typeMatch && roleMatch && searchMatch) {
+                    card.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            if (globalData.length > 0) {
+                if (visibleCount === 0) {
+                    resultCount.innerHTML = `<span class="text-red-500 dark:text-red-400 font-bold">No events found</span> matching the search.`;
+                } else {
+                    resultCount.innerText = `Showing ${visibleCount} of ${globalData.length} events`;
+                }
+            }
+        }
+
+        window.toggleExpand = function(btn) {
+            const body = btn.nextElementSibling;
+            const arrow = btn.querySelector('.arrow');
+            
+            if (body.classList.contains('hidden')) {
+                body.classList.remove('hidden');
+                arrow.classList.add('rotate-180');
+            } else {
+                body.classList.add('hidden');
+                arrow.classList.remove('rotate-180');
+            }
+        };
+
+        window.expandAll = function() {
+            const cards = timeline.querySelectorAll('.turn-card-item');
+            cards.forEach(card => {
+                if (card.style.display !== 'none') {
+                    const body = card.querySelector('.turn-body');
+                    const arrow = card.querySelector('.arrow');
+                    if (body && body.classList.contains('hidden')) {
+                        body.classList.remove('hidden');
+                        arrow.classList.add('rotate-180');
+                    }
+                }
+            });
+        };
+
+        window.collapseAll = function() {
+            const cards = timeline.querySelectorAll('.turn-card-item');
+            cards.forEach(card => {
+                if (card.style.display !== 'none') {
+                    const body = card.querySelector('.turn-body');
+                    const arrow = card.querySelector('.arrow');
+                    if (body && !body.classList.contains('hidden')) {
+                        body.classList.add('hidden');
+                        arrow.classList.remove('rotate-180');
+                    }
+                }
+            });
+        };
+
+        function escapeHTML(str) {
+            return str.replace(/[&<>'"]/g, tag => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                "'": '&#39;',
+                '"': '&quot;'
+            }[tag] || tag));
+        }
+
+        function simpleMarkdown(text) {
+            let html = escapeHTML(text);
+            
+            const codeWithLangRegex = new RegExp('`{3}(\\w*)\\n([\\s\\S]*?)`{3}', 'g');
+            const simpleCodeRegex = new RegExp('`{3}([\\s\\S]*?)`{3}', 'g');
+            const inlineRegex = new RegExp('`([^`]+)`', 'g');
+
+            html = html.replace(codeWithLangRegex, '<pre class="bg-slate-100 dark:bg-slate-900 p-4 rounded-lg my-3 overflow-x-auto text-[13px] font-mono border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-300"><code>$2</code></pre>');
+            html = html.replace(simpleCodeRegex, '<pre class="bg-slate-100 dark:bg-slate-900 p-4 rounded-lg my-3 overflow-x-auto text-[13px] font-mono border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-300"><code>$1</code></pre>');
+            html = html.replace(inlineRegex, '<code class="bg-slate-100 dark:bg-slate-900 px-1.5 py-0.5 rounded text-pink-600 dark:text-pink-400 font-mono text-[0.9em]">$1</code>');
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="font-bold">$1</strong>');
+            html = html.replace(/\*(.*?)\*/g, '<em class="italic">$1</em>');
+            html = html.replace(/^### (.*$)/gim, '<h3 class="text-lg font-bold mt-4 mb-2 text-slate-900 dark:text-white">$1</h3>');
+            html = html.replace(/^## (.*$)/gim, '<h2 class="text-xl font-bold mt-5 mb-3 text-slate-900 dark:text-white">$1</h2>');
+            html = html.replace(/^# (.*$)/gim, '<h1 class="text-2xl font-bold mt-6 mb-4 text-slate-900 dark:text-white">$1</h1>');
+            html = html.replace(/^- (.*$)/gim, '<li class="ml-5 list-disc my-1">$1</li>');
+            
+            let parts = html.split(/(<pre[\s\S]*?<\/pre>)/);
+            for (let i = 0; i < parts.length; i++) {
+                if (!parts[i].startsWith('<pre')) {
+                    parts[i] = parts[i].replace(/\n/g, '<br>');
+                }
+            }
+            return parts.join('');
+        }
+    </script>
+</body>
+</html>
