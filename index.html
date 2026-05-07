@@ -212,7 +212,7 @@
 
                 <!-- Controls (Hidden until rendered) -->
                 <div id="jsonControls" class="hidden mb-6 space-y-4">
-                    <!-- Toggle Views -->
+                    <!-- Search & Actions -->
                     <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
                         <div class="relative w-full sm:flex-1">
                             <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -220,25 +220,28 @@
                             </div>
                             <input type="text" id="jsonViewerSearch" placeholder="Filter nodes by text or key..." class="block w-full pl-10 pr-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg leading-5 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 placeholder-slate-400 dark:placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-shadow">
                         </div>
-                        <div class="inline-flex bg-slate-100 dark:bg-slate-900 rounded-lg p-1 border border-slate-200 dark:border-slate-700 w-full sm:w-auto overflow-hidden">
-                            <button id="btnTreeView" onclick="setJsonViewMode('tree')" class="flex-1 sm:flex-none px-4 py-1.5 text-sm font-bold rounded-md bg-white dark:bg-slate-700 shadow text-blue-600 dark:text-blue-400 transition-all">Tree View</button>
-                            <button id="btnCardView" onclick="setJsonViewMode('card')" class="flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">Card View (Human Readable)</button>
+                        <div class="flex gap-2 w-full sm:w-auto">
+                            <button onclick="expandAllJson()" class="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 text-xs font-medium bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">Expand All</button>
+                            <button onclick="collapseAllJson()" class="flex-1 sm:flex-none px-3 py-2 sm:py-1.5 text-xs font-medium bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-300 rounded-md transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500">Collapse All</button>
                         </div>
                     </div>
                     
-                    <div class="border border-slate-200 dark:border-slate-700 rounded-lg p-4 bg-slate-50 dark:bg-slate-900/50">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="text-sm font-bold text-slate-700 dark:text-slate-300">Filter by Keys (Tags)</h3>
-                            <div class="flex items-center gap-4">
-                                <div class="flex gap-2 border-r border-slate-300 dark:border-slate-600 pr-4">
-                                    <button onclick="expandAllJson()" class="text-[12px] font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Expand All</button>
-                                    <button onclick="collapseAllJson()" class="text-[12px] font-medium text-slate-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Collapse All</button>
-                                </div>
-                                <button onclick="clearJsonTags()" class="text-[12px] font-medium text-blue-600 dark:text-blue-400 hover:underline">Clear Tags</button>
+                    <!-- Toggle Views -->
+                    <div class="flex flex-col sm:flex-row justify-end items-center gap-3 border-t border-slate-200 dark:border-slate-700 pt-4">
+                        <!-- Card Layout Controls (Grid vs List) -->
+                        <div id="cardLayoutControls" class="hidden flex items-center justify-end">
+                            <span class="text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider mr-2">Layout:</span>
+                            <div class="inline-flex bg-slate-100 dark:bg-slate-900 rounded-lg p-1 border border-slate-200 dark:border-slate-700">
+                                <button id="btnGridView" onclick="setCardLayout('grid')" class="px-3 py-1 text-xs font-bold rounded-md bg-white dark:bg-slate-700 shadow text-blue-600 dark:text-blue-400 transition-all">Grid</button>
+                                <button id="btnListView" onclick="setCardLayout('list')" class="px-3 py-1 text-xs font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">List</button>
                             </div>
                         </div>
-                        <div id="jsonTagsContainer" class="flex flex-wrap gap-2 max-h-40 overflow-y-auto">
-                            <!-- Tags injected here -->
+                        
+                        <!-- Main View Modes -->
+                        <div class="inline-flex bg-slate-100 dark:bg-slate-900 rounded-lg p-1 border border-slate-200 dark:border-slate-700 w-full sm:w-auto overflow-hidden">
+                            <button id="btnTreeView" onclick="setJsonViewMode('tree')" class="flex-1 sm:flex-none px-4 py-1.5 text-sm font-bold rounded-md bg-white dark:bg-slate-700 shadow text-blue-600 dark:text-blue-400 transition-all">Tree View</button>
+                            <button id="btnCardView" onclick="setJsonViewMode('card')" class="flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">Card View</button>
+                            <button id="btnTableView" onclick="setJsonViewMode('table')" class="flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all">List View</button>
                         </div>
                     </div>
                 </div>
@@ -250,6 +253,11 @@
                 <!-- Output Card View -->
                 <div id="jsonViewerCardOutput" class="hidden">
                     <!-- Cards injected here -->
+                </div>
+                
+                <!-- Output Table View -->
+                <div id="jsonViewerTableOutput" class="hidden">
+                    <!-- Table injected here -->
                 </div>
             </div>
         </div>
@@ -441,39 +449,65 @@
 
         // --- JSON VIEWER LOGIC ---
         let rawJsonData = null;
-        let activeJsonTags = new Set();
-        let allJsonKeys = new Set();
         let currentJsonViewMode = 'tree';
+        let currentCardLayout = 'grid';
 
         function setJsonViewMode(mode) {
             currentJsonViewMode = mode;
             const btnTree = document.getElementById('btnTreeView');
             const btnCard = document.getElementById('btnCardView');
+            const btnTable = document.getElementById('btnTableView');
+            
             const outTree = document.getElementById('jsonViewerOutput');
             const outCard = document.getElementById('jsonViewerCardOutput');
+            const outTable = document.getElementById('jsonViewerTableOutput');
+            
+            const cardLayoutControls = document.getElementById('cardLayoutControls');
 
-            if (mode === 'tree') {
-                btnTree.className = 'flex-1 sm:flex-none px-4 py-1.5 text-sm font-bold rounded-md bg-white dark:bg-slate-700 shadow text-blue-600 dark:text-blue-400 transition-all';
-                btnCard.className = 'flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all';
-                outTree.classList.remove('hidden');
-                outCard.classList.add('hidden');
-            } else {
-                btnCard.className = 'flex-1 sm:flex-none px-4 py-1.5 text-sm font-bold rounded-md bg-white dark:bg-slate-700 shadow text-blue-600 dark:text-blue-400 transition-all';
-                btnTree.className = 'flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all';
-                outCard.classList.remove('hidden');
-                outTree.classList.add('hidden');
-            }
+            const activeClass = 'flex-1 sm:flex-none px-4 py-1.5 text-sm font-bold rounded-md bg-white dark:bg-slate-700 shadow text-blue-600 dark:text-blue-400 transition-all';
+            const inactiveClass = 'flex-1 sm:flex-none px-4 py-1.5 text-sm font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all';
+
+            btnTree.className = mode === 'tree' ? activeClass : inactiveClass;
+            btnCard.className = mode === 'card' ? activeClass : inactiveClass;
+            btnTable.className = mode === 'table' ? activeClass : inactiveClass;
+
+            outTree.classList.toggle('hidden', mode !== 'tree');
+            outCard.classList.toggle('hidden', mode !== 'card');
+            outTable.classList.toggle('hidden', mode !== 'table');
+
+            cardLayoutControls.classList.toggle('hidden', mode !== 'card');
+
+            updateJsonView();
+        }
+
+        function setCardLayout(layout) {
+            currentCardLayout = layout;
+            const btnGrid = document.getElementById('btnGridView');
+            const btnList = document.getElementById('btnListView');
+            
+            const activeClass = 'px-3 py-1 text-xs font-bold rounded-md bg-white dark:bg-slate-700 shadow text-blue-600 dark:text-blue-400 transition-all';
+            const inactiveClass = 'px-3 py-1 text-xs font-medium rounded-md text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 transition-all';
+
+            btnGrid.className = layout === 'grid' ? activeClass : inactiveClass;
+            btnList.className = layout === 'list' ? activeClass : inactiveClass;
+
             updateJsonView();
         }
 
         window.expandAllJson = function() {
-            const container = currentJsonViewMode === 'tree' ? document.getElementById('jsonViewerOutput') : document.getElementById('jsonViewerCardOutput');
-            container.querySelectorAll('details').forEach(d => d.setAttribute('open', ''));
+            let containerId = currentJsonViewMode === 'tree' ? 'jsonViewerOutput' : (currentJsonViewMode === 'card' ? 'jsonViewerCardOutput' : 'jsonViewerTableOutput');
+            const container = document.getElementById(containerId);
+            if(container) {
+                container.querySelectorAll('details').forEach(d => d.setAttribute('open', ''));
+            }
         };
 
         window.collapseAllJson = function() {
-            const container = currentJsonViewMode === 'tree' ? document.getElementById('jsonViewerOutput') : document.getElementById('jsonViewerCardOutput');
-            container.querySelectorAll('details').forEach(d => d.removeAttribute('open'));
+            let containerId = currentJsonViewMode === 'tree' ? 'jsonViewerOutput' : (currentJsonViewMode === 'card' ? 'jsonViewerCardOutput' : 'jsonViewerTableOutput');
+            const container = document.getElementById(containerId);
+            if(container) {
+                container.querySelectorAll('details').forEach(d => d.removeAttribute('open'));
+            }
         };
 
         window.toggleNestedDetails = function(e, btn, openState) {
@@ -511,19 +545,19 @@
 
                 rawJsonData = JSON.parse(cleanInput);
                 
-                allJsonKeys.clear();
-                activeJsonTags.clear();
-                extractAllKeys(rawJsonData, allJsonKeys);
-                
-                renderJsonTags();
                 document.getElementById('jsonControls').classList.remove('hidden');
                 document.getElementById('jsonViewerSearch').value = '';
                 
-                if (currentJsonViewMode === 'tree') {
-                    document.getElementById('jsonViewerOutput').classList.remove('hidden');
-                } else {
-                    document.getElementById('jsonViewerCardOutput').classList.remove('hidden');
-                }
+                // Show the active view container
+                const outTree = document.getElementById('jsonViewerOutput');
+                const outCard = document.getElementById('jsonViewerCardOutput');
+                const outTable = document.getElementById('jsonViewerTableOutput');
+                
+                outTree.classList.toggle('hidden', currentJsonViewMode !== 'tree');
+                outCard.classList.toggle('hidden', currentJsonViewMode !== 'card');
+                outTable.classList.toggle('hidden', currentJsonViewMode !== 'table');
+
+                document.getElementById('cardLayoutControls').classList.toggle('hidden', currentJsonViewMode !== 'card');
                 
                 updateJsonView();
             } catch (e) {
@@ -535,50 +569,7 @@
             updateJsonView();
         });
 
-        function clearJsonTags() {
-            activeJsonTags.clear();
-            renderJsonTags();
-            updateJsonView();
-        }
-
-        function extractAllKeys(data, keysSet) {
-            if (data && typeof data === 'object' && !Array.isArray(data)) {
-                Object.keys(data).forEach(k => {
-                    keysSet.add(k);
-                    extractAllKeys(data[k], keysSet);
-                });
-            } else if (Array.isArray(data)) {
-                data.forEach(item => extractAllKeys(item, keysSet));
-            }
-        }
-
-        function renderJsonTags() {
-            const container = document.getElementById('jsonTagsContainer');
-            container.innerHTML = '';
-            
-            const sortedKeys = Array.from(allJsonKeys).sort((a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'}));
-            
-            sortedKeys.forEach(key => {
-                const btn = document.createElement('button');
-                const isActive = activeJsonTags.has(key);
-                
-                btn.className = `px-3 py-1.5 text-[11px] font-medium rounded-md border transition-colors ${
-                    isActive 
-                        ? 'bg-blue-600 text-white border-blue-700 dark:bg-blue-600 dark:border-blue-500' 
-                        : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border-slate-300 dark:border-slate-600 hover:bg-slate-100 dark:hover:bg-slate-700'
-                }`;
-                btn.innerText = key;
-                btn.onclick = () => {
-                    if (isActive) activeJsonTags.delete(key);
-                    else activeJsonTags.add(key);
-                    renderJsonTags(); 
-                    updateJsonView(); 
-                };
-                container.appendChild(btn);
-            });
-        }
-
-        function filterJsonData(data, query, tags) {
+        function filterJsonData(data, query) {
             query = query.toLowerCase();
             
             function filterNode(node) {
@@ -594,14 +585,11 @@
                 for (const key in node) {
                     const child = node[key];
                     const keyMatchQuery = query && key.toLowerCase().includes(query);
-                    const keyMatchTag = tags.size > 0 && tags.has(key);
 
                     let childResult = filterNode(child);
                     let keepChild = false;
                     
-                    if (tags.size > 0) {
-                        if (keyMatchTag || childResult.keep) keepChild = true;
-                    } else if (query) {
+                    if (query) {
                         if (keyMatchQuery || childResult.keep) keepChild = true;
                     } else {
                         keepChild = true;
@@ -611,7 +599,7 @@
                         keepNode = true;
                         let valToKeep;
                         
-                        if ((keyMatchTag || keyMatchQuery) && !childResult.keep) {
+                        if (keyMatchQuery && !childResult.keep) {
                             valToKeep = child;
                         } else {
                             valToKeep = childResult.keep ? childResult.val : child;
@@ -624,31 +612,36 @@
                 return { keep: keepNode, val: newNode };
             }
 
-            if (!query && tags.size === 0) return data;
+            if (!query) return data;
             
             const res = filterNode(data);
             return res.keep ? res.val : (Array.isArray(data) ? [] : {});
         }
 
         function updateJsonView() {
+            if(!rawJsonData) return;
             const query = document.getElementById('jsonViewerSearch').value;
-            const filteredData = filterJsonData(rawJsonData, query, activeJsonTags);
+            const filteredData = filterJsonData(rawJsonData, query);
             
             const isEmpty = Object.keys(filteredData).length === 0 && (!Array.isArray(filteredData) || filteredData.length === 0);
             
-            if (isEmpty && (query || activeJsonTags.size > 0)) {
-                const emptyMsg = '<div class="text-slate-500 italic p-4 text-center">No nodes match your active filters.</div>';
+            if (isEmpty && query) {
+                const emptyMsg = '<div class="text-slate-500 italic p-4 text-center">No nodes match your search filter.</div>';
                 document.getElementById('jsonViewerOutput').innerHTML = emptyMsg;
                 document.getElementById('jsonViewerCardOutput').innerHTML = emptyMsg;
+                document.getElementById('jsonViewerTableOutput').innerHTML = emptyMsg;
                 return;
             }
 
             if (currentJsonViewMode === 'tree') {
                 const html = buildJsonNode(filteredData, null, true, 0);
                 document.getElementById('jsonViewerOutput').innerHTML = html;
-            } else {
-                const html = buildJsonCards(filteredData);
+            } else if (currentJsonViewMode === 'card') {
+                const html = buildJsonCards(filteredData, currentCardLayout);
                 document.getElementById('jsonViewerCardOutput').innerHTML = html;
+            } else if (currentJsonViewMode === 'table') {
+                const html = buildJsonTable(filteredData);
+                document.getElementById('jsonViewerTableOutput').innerHTML = html;
             }
         }
 
@@ -698,8 +691,9 @@
         }
 
         // Card View Builder
-        function buildJsonCards(data) {
-            let html = '<div class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">';
+        function buildJsonCards(data, layout) {
+            let wrapperClass = layout === 'grid' ? 'grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6' : 'flex flex-col gap-6';
+            let html = `<div class="${wrapperClass}">`;
             
             function formatCardValue(val, depth = 0) {
                 if (val === null) return '<span class="text-slate-400 italic text-[13px]">null</span>';
@@ -823,6 +817,152 @@
                 });
             }
         };
+
+        // Table View Builder
+        function buildJsonTable(data) {
+            function formatTableCell(val, depth = 0) {
+                if (val === null) return '<span class="text-slate-400 italic text-[12px]">null</span>';
+                if (typeof val !== 'object') {
+                    if (typeof val === 'string') return `<span class="text-[12px] text-green-700 dark:text-green-400 font-medium whitespace-pre-wrap">${escapeHTML(val)}</span>`;
+                    if (typeof val === 'boolean') return `<span class="text-[12px] text-blue-600 dark:text-blue-400 font-bold">${val}</span>`;
+                    return `<span class="text-[12px] text-slate-800 dark:text-slate-200">${escapeHTML(String(val))}</span>`;
+                }
+
+                const isArr = Array.isArray(val);
+                const keys = Object.keys(val);
+                if (keys.length === 0) return `<span class="text-slate-400 italic text-[12px]">${isArr ? '[]' : '{}'}</span>`;
+
+                // Render Array of Objects as inner table
+                let isObjArray = isArr && val.length > 0 && val.every(item => item !== null && typeof item === 'object' && !Array.isArray(item));
+                if (isObjArray && depth < 3) {
+                    let innerKeys = new Set();
+                    val.forEach(item => Object.keys(item).forEach(k => innerKeys.add(k)));
+                    let columns = Array.from(innerKeys);
+                    
+                    let innerHtml = `<div class="overflow-x-auto rounded border border-slate-200 dark:border-slate-700/80 my-1 shadow-sm"><table class="w-full text-left font-mono text-[11px] border-collapse bg-white dark:bg-slate-800/50">`;
+                    innerHtml += `<thead class="bg-slate-100 dark:bg-slate-700/80 border-b border-slate-200 dark:border-slate-700"><tr>`;
+                    innerHtml += `<th class="w-8 px-2 py-1.5 text-center text-slate-400 border-r border-slate-200 dark:border-slate-700">#</th>`;
+                    columns.forEach(col => {
+                        innerHtml += `<th class="px-3 py-1.5 font-semibold text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700 last:border-0">${escapeHTML(col)}</th>`;
+                    });
+                    innerHtml += `</tr></thead><tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">`;
+                    
+                    val.forEach((item, idx) => {
+                        innerHtml += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">`;
+                        innerHtml += `<td class="px-2 py-1.5 text-center text-slate-400 border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/20">${idx + 1}</td>`;
+                        columns.forEach(col => {
+                            innerHtml += `<td class="px-3 py-1.5 border-r border-slate-200 dark:border-slate-700 last:border-0 align-top">${formatTableCell(item[col], depth + 1)}</td>`;
+                        });
+                        innerHtml += `</tr>`;
+                    });
+                    innerHtml += `</tbody></table></div>`;
+                    return innerHtml;
+                }
+
+                // Render regular object/array as a card
+                let cardHtml = `<div class="flex flex-col w-full bg-slate-50/50 dark:bg-slate-800/30 rounded border border-slate-200 dark:border-slate-700/80 px-3 py-2 my-1 gap-1">`;
+                keys.forEach(k => {
+                    let keyLabel = isArr ? `[${k}]` : escapeHTML(k);
+                    let childVal = val[k];
+                    let isPrimitive = childVal === null || typeof childVal !== 'object' || Object.keys(childVal).length === 0;
+                    
+                    if (isPrimitive) {
+                        cardHtml += `<div class="flex flex-row justify-between items-start gap-4 py-1.5 border-b border-slate-100 dark:border-slate-700/50 last:border-0 w-full">
+                            <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider shrink-0 mt-0.5">${keyLabel}</span>
+                            <div class="text-right break-words min-w-0">${formatTableCell(childVal, depth + 1)}</div>
+                        </div>`;
+                    } else {
+                        cardHtml += `<div class="flex flex-col w-full py-1.5 border-b border-slate-100 dark:border-slate-700/50 last:border-0">
+                            <span class="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider mb-1.5">${keyLabel}</span>
+                            <div class="w-full">${formatTableCell(childVal, depth + 1)}</div>
+                        </div>`;
+                    }
+                });
+                cardHtml += `</div>`;
+
+                if (depth > 0) {
+                    const titleStr = isArr ? `Array (${keys.length})` : `Object (${keys.length})`;
+                    return `<details class="group w-full bg-white dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden mt-1">
+                        <summary class="p-2 text-[11px] font-semibold text-slate-700 dark:text-slate-300 cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-700 flex items-center gap-1.5 select-none list-none [&::-webkit-details-marker]:hidden transition-colors">
+                            <svg class="w-3.5 h-3.5 text-slate-400 transition-transform group-open:rotate-90" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                            ${titleStr}
+                        </summary>
+                        <div class="px-3 pb-3 border-t border-slate-100 dark:border-slate-700 bg-slate-50/30 dark:bg-slate-900/30">
+                            ${cardHtml}
+                        </div>
+                    </details>`;
+                }
+
+                return cardHtml;
+            }
+
+            let html = '<div class="overflow-x-auto rounded-lg border border-slate-200 dark:border-slate-700 shadow-sm">';
+            html += '<table class="w-full text-left font-mono text-[13px] border-collapse bg-white dark:bg-slate-800">';
+
+            if (Array.isArray(data)) {
+                let isObjArray = data.length > 0 && data.every(item => item !== null && typeof item === 'object' && !Array.isArray(item));
+                
+                if (isObjArray) {
+                    let keys = new Set();
+                    data.forEach(item => Object.keys(item).forEach(k => keys.add(k)));
+                    let columns = Array.from(keys);
+
+                    html += `<thead class="bg-slate-100 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-700"><tr>`;
+                    html += `<th class="w-12 px-3 py-2 text-center text-slate-500 border-r border-slate-200 dark:border-slate-700">#</th>`;
+                    columns.forEach(col => {
+                        html += `<th class="px-4 py-2 font-semibold text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700 last:border-0">${escapeHTML(col)}</th>`;
+                    });
+                    html += `</tr></thead>`;
+
+                    html += `<tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">`;
+                    data.forEach((item, idx) => {
+                        html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">`;
+                        html += `<td class="px-3 py-2 text-center text-slate-400 border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/20">${idx + 1}</td>`;
+                        columns.forEach(col => {
+                            html += `<td class="px-4 py-2 border-r border-slate-200 dark:border-slate-700 last:border-0 align-top">${formatTableCell(item[col], 0)}</td>`;
+                        });
+                        html += `</tr>`;
+                    });
+                    html += `</tbody>`;
+                } else {
+                    html += `<thead class="bg-slate-100 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-700"><tr>`;
+                    html += `<th class="w-12 px-3 py-2 text-center text-slate-500 border-r border-slate-200 dark:border-slate-700">#</th>`;
+                    html += `<th class="px-4 py-2 font-semibold text-slate-700 dark:text-slate-300">Value</th>`;
+                    html += `</tr></thead>`;
+
+                    html += `<tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">`;
+                    data.forEach((item, idx) => {
+                        html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">`;
+                        html += `<td class="px-3 py-2 text-center text-slate-400 border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/20">${idx + 1}</td>`;
+                        html += `<td class="px-4 py-2 align-top">${formatTableCell(item, 0)}</td>`;
+                        html += `</tr>`;
+                    });
+                    html += `</tbody>`;
+                }
+            } else if (typeof data === 'object' && data !== null) {
+                html += `<thead class="bg-slate-100 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-700"><tr>`;
+                html += `<th class="px-4 py-2 font-semibold text-slate-700 dark:text-slate-300 border-r border-slate-200 dark:border-slate-700 w-1/4">Key</th>`;
+                html += `<th class="px-4 py-2 font-semibold text-slate-700 dark:text-slate-300">Value</th>`;
+                html += `</tr></thead>`;
+
+                html += `<tbody class="divide-y divide-slate-100 dark:divide-slate-700/50">`;
+                Object.keys(data).forEach(key => {
+                    html += `<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">`;
+                    html += `<td class="px-4 py-3 font-bold text-slate-600 dark:text-slate-400 border-r border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/20 align-top">${escapeHTML(key)}</td>`;
+                    html += `<td class="px-4 py-2 align-top">${formatTableCell(data[key], 0)}</td>`;
+                    html += `</tr>`;
+                });
+                html += `</tbody>`;
+            } else {
+                html += `<thead class="bg-slate-100 dark:bg-slate-700 border-b border-slate-200 dark:border-slate-700"><tr>`;
+                html += `<th class="px-4 py-2 font-semibold text-slate-700 dark:text-slate-300">Value</th>`;
+                html += `</tr></thead>`;
+                html += `<tbody><tr><td class="px-4 py-2 align-top">${formatTableCell(data, 0)}</td></tr></tbody>`;
+            }
+
+            html += '</table></div>';
+            return html;
+        }
 
         // --- COMMON UTILS ---
         function preventDefaults(e) {
